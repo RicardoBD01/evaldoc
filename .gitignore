@@ -1,0 +1,7 @@
+# Archivos temporales
+.DS_Store
+thumbs.db
+
+# Configuración local
+.env
+*.log
