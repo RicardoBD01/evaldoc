@@ -31,10 +31,9 @@
                                         </a>
                                         <form>
                                             <div class="mb-3">
-                                                <label for="exampleInputEmail1" class="form-label">Nombre de
-                                                    usuario</label>
+                                                <label for="exampleInputEmail1" class="form-label">Correo institucional</label>
                                                 <input type="email" class="form-control" id="exampleInputEmail1"
-                                                    aria-describedby="emailHelp">
+                                                    aria-describedby="emailHelp" placeholder="ejemplo@cenidet.tecnm.mx">
                                             </div>
                                             <div class="mb-4">
                                                 <label for="exampleInputPassword1" class="form-label">Contraseña</label>
@@ -57,7 +56,7 @@
                                             <div class="d-flex align-items-center justify-content-center">
                                                 <p class="fs-4 mb-0 fw-bold">¿No tienes una cuenta?</p>
                                                 <a class="text-primary fw-bold ms-2"
-                                                    href="./authentication-register.html">Crea una</a>
+                                                    href="/evaldoc/registro">Crea una</a>
                                             </div>
                                         </form>
                                     </div>
