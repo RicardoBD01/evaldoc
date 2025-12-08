@@ -1,23 +1,35 @@
 <?php
-require_once __DIR__ . '/../conn/conn.php';
+require_once $_SERVER['DOCUMENT_ROOT'] . "/evaldoc/conn/conn.php";
+
+header("Content-Type: application/json; charset=utf-8");
 
 $principal = new Principal();
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $email = $_POST['email'] ?? '';
-    $password = $_POST['password'] ?? '';
+$email = $_POST['email'] ?? '';
+$password = $_POST['pass'] ?? '';
 
-    $usuario = $principal->login($email, $password);
+if ($email === '' || $password === '') {
+    echo json_encode([
+        "success" => false,
+        "message" => "Debes llenar todos los campos."
+    ]);
+    exit;
+}
 
-    if ($usuario) {
-        // Iniciar sesión, redirigir, etc.
-        session_start();
-        $_SESSION['usuario_id'] = $usuario['id'];
-        $_SESSION['nombre'] = $usuario['nombre'];
+$usuario = $principal->login($email, $password);
 
-        header('Location: /pages/dashboard.php');
-        exit;
-    } else {
-        $error = "Correo o contraseña incorrectos";
-    }
+if ($usuario) {
+    session_start();
+    //$_SESSION['usuario_id'] = $usuario['id'];
+    //$_SESSION['nombre'] = $usuario['nombre'];
+
+    echo json_encode([
+        "success" => true,
+        "message" => "Login correcto."
+    ]);
+} else {
+    echo json_encode([
+        "success" => false,
+        "message" => "Correo o contraseña inválidos."
+    ]);
 }

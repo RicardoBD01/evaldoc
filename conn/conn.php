@@ -5,9 +5,6 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../config.php';
 
-use PDO;
-use PDOStatement;
-
 class Principal {
     private PDO $pdo;
 
@@ -47,10 +44,7 @@ class Principal {
 
     // Ejemplo: obtener usuario por email
     public function obtenerUsuarioPorEmail(string $email): ?array {
-        $sql = "SELECT id, nombre, email, password
-                 FROM usuarios
-                 WHERE email = :email
-                 LIMIT 1";
+        $sql = "SELECT * FROM myapp_usuario WHERE correo_usuario = :email LIMIT 1";
 
         $stmt = $this->query($sql, [':email' => $email]);
         $usuario = $stmt->fetch();

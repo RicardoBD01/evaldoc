@@ -32,16 +32,16 @@
                                     </a>
                                     <form>
                                         <div class="mb-3">
-                                            <label for="exampleInputEmail1" class="form-label">Correo
+                                            <label for="inputemail" class="form-label">Correo
                                                 institucional</label>
-                                            <input type="email" class="form-control" id="exampleInputEmail1"
+                                            <input type="email" class="form-control" id="inputemail"
                                                 aria-describedby="emailHelp" name="inputemail"
                                                 placeholder="ejemplo@cenidet.tecnm.mx">
                                         </div>
                                         <div class="mb-4">
-                                            <label for="exampleInputPassword1" class="form-label">Contraseña</label>
+                                            <label for="inputpass" class="form-label">Contraseña</label>
                                             <input type="password" class="form-control" name="inputpass"
-                                                id="exampleInputPassword1">
+                                                id="inputpass">
                                         </div>
                                         <div class="d-flex align-items-center justify-content-between mb-4">
                                             <div class="form-check">
@@ -76,6 +76,7 @@
     <?php
     include BASE_PATH . "/includes/footer.php";
     ?>
+    <script src="/evaldoc/assets/js/login.js"></script>
 </body>
 
 </html>
