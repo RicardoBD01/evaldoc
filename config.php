@@ -1,40 +1,19 @@
 <?php
 define("BASE_PATH", $_SERVER['DOCUMENT_ROOT'] . "/evaldoc");
 
-// =========================================
-// Cargar Composer (phpdotenv)
-// =========================================
+// EVALDOC/config.php
+
 require __DIR__ . '/vendor/autoload.php';
 
-// =========================================
-// Cargar archivo .env
-// =========================================
-$dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
-$dotenv->safeLoad();  // safeLoad evita error si el archivo no existe
+use Dotenv\Dotenv;
+use PDO;
+use PDOException;
 
-// =========================================
-// Configuración global
-// =========================================
-define('APP_ENV', $_ENV['APP_ENV'] ?? 'production');
-define('APP_DEBUG', filter_var($_ENV['APP_DEBUG'] ?? false, FILTER_VALIDATE_BOOLEAN));
-define('APP_URL', $_ENV['APP_URL'] ?? 'http://localhost');
+// Cargar variables de entorno desde .env
+$dotenv = Dotenv::createImmutable(__DIR__);
+$dotenv->safeLoad();
 
-// =========================================
-// Función para manejar errores
-// =========================================
-if (APP_DEBUG) {
-    ini_set('display_errors', 1);
-    ini_set('display_startup_errors', 1);
-    error_reporting(E_ALL);
-} else {
-    ini_set('display_errors', 0);
-    error_reporting(0);
-}
-
-// =========================================
-// Conexión PDO a base de datos PostgreSQL
-// =========================================
-function db() {
+function db(): PDO {
     $connection = $_ENV['DB_CONNECTION'] ?? 'pgsql';
     $host       = $_ENV['DB_HOST'] ?? 'localhost';
     $port       = $_ENV['DB_PORT'] ?? 5432;
@@ -52,14 +31,8 @@ function db() {
         ]);
 
         return $pdo;
-
     } catch (PDOException $e) {
-
-        if (APP_DEBUG) {
-            die("Error de conexión a la base de datos: " . $e->getMessage());
-        } else {
-            error_log("DB ERROR: " . $e->getMessage());
-            die("Error en el servidor. Intente más tarde.");
-        }
+        // En desarrollo puedes mostrarlo; en producción solo log
+        die("Error de conexión a la base de datos: " . $e->getMessage());
     }
 }
