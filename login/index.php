@@ -30,6 +30,7 @@
                                         <img src="/evaldoc/assets/images/logos/Logo-CENIDET.png" alt="logo cenidet"
                                             width="140px">
                                     </a>
+                                    <div id="mensajes"></div>
                                     <form>
                                         <div class="mb-3">
                                             <label for="inputemail" class="form-label">Correo
@@ -40,8 +41,7 @@
                                         </div>
                                         <div class="mb-4">
                                             <label for="inputpass" class="form-label">Contraseña</label>
-                                            <input type="password" class="form-control" name="inputpass"
-                                                id="inputpass">
+                                            <input type="password" class="form-control" name="inputpass" id="inputpass">
                                         </div>
                                         <div class="d-flex align-items-center justify-content-between mb-4">
                                             <div class="form-check">
@@ -68,7 +68,6 @@
                             </div>
                         </div>
                     </div>
-
                 </div>
             </div>
         </div>

@@ -14,7 +14,7 @@ function realizarLogin() {
     console.log(email + "-" + pass);
 
     if (email === "" || pass === "") {
-        mostrarError("Por favor llena todos los campos.");
+        mostrarError('warning', "Por favor llena todos los campos.");
         return;
     }
     data.append('email', email);
@@ -30,7 +30,7 @@ function realizarLogin() {
             if (response.success) {
                 window.location.href = "/evaldoc/";
             } else {
-                mostrarError(response.message);
+                mostrarError('success', response.message);
             }
         },
         error: function (jqXHR, textStatus, errorThrown) {
@@ -38,11 +38,25 @@ function realizarLogin() {
             console.error("Respuesta:", jqXHR.responseText);
             console.error("Error:", errorThrown);
 
-            mostrarError("Error de conexión con el servidor.");
+            mostrarError('danger', "Error de conexión con el servidor.");
         }
     });
 }
 
-function mostrarError(texto) {
-    console.log(texto);
+function mostrarError(tipo, texto) {
+    let mensajes = document.getElementById('mensajes');
+    var icon;
+
+    mensajes.setAttribute('class', 'd-none')
+
+    if(tipo == 'success') icon = '<i class="fa-solid fa-circle-check"></i>';
+    else if(tipo == 'warning') icon = '<i class="fa-solid fa-triangle-exclamation"></i>';
+    else if(tipo == 'danger') icon = '<i class="fa-solid fa-circle-xmark"></i>';
+
+    let alert = '<div class="alert alert-'+ tipo + '" role="alert">' +
+                    icon + ' ' + texto +
+                '</div>';
+    
+    mensajes.setAttribute('class', '');
+    mensajes.innerHTML = alert;
 }
