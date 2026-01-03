@@ -28,9 +28,9 @@ function realizarLogin() {
         processData: false,
         success: function (response) {
             if (response.success) {
-                window.location.href = "/evaldoc/";
+                mostrarError('success', response.message);
             } else {
-                mostrarError(response.message);
+                mostrarError('danger', response.message);
             }
         },
         error: function (jqXHR, textStatus, errorThrown) {
@@ -38,11 +38,14 @@ function realizarLogin() {
             console.error("Respuesta:", jqXHR.responseText);
             console.error("Error:", errorThrown);
 
-            mostrarError("Error de conexión con el servidor.");
+            mostrarError("danger", "Error de conexión con el servidor.");
         }
     });
 }
 
-function mostrarError(texto) {
+function mostrarError(tipo, texto) {
+    var mensaje = '<div class="alert alert-' + tipo + '" role="alert">' +
+                        texto +
+                    '</div>';
     console.log(texto);
 }
