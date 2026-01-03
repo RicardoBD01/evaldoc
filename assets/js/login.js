@@ -28,7 +28,7 @@ function realizarLogin() {
         processData: false,
         success: function (response) {
             if (response.success) {
-                window.location.href = "/evaldoc/";
+                mostrarError('success', response.message);
             } else {
                 mostrarError('success', response.message);
             }
