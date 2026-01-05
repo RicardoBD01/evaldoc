@@ -1,7 +1,7 @@
 <?php
 // evaldoc/tools/set_passwords.php
 
-require_once __DIR__ . '/../config.php';   // ajusta la ruta si es necesario
+require_once __DIR__ . '/../config.php';   // ajustar la ruta si es necesario
 
 $pdo = db();
 
@@ -14,9 +14,9 @@ $hash = password_hash($plainPassword, PASSWORD_DEFAULT);
 try {
     // 3) Actualizar TODOS los usuarios (o solo los que aún no tienen password)
     $sql = "
-        UPDATE myapp_usuario
-        SET password = :hash
-        WHERE password IS NULL
+        UPDATE usuarios
+        SET pass = :hash
+        WHERE id = 1
     ";
 
     $stmt = $pdo->prepare($sql);

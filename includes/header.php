@@ -4,3 +4,4 @@
 <link rel="stylesheet" href="/evaldoc/assets/css/styles.min.css" />
 <link rel="stylesheet" href="/evaldoc/assets/libs/fontawesome/css/fontawesome.css">
 <link rel="stylesheet" href="/evaldoc/assets/libs/fontawesome/css/solid.css">
+<link rel="stylesheet" href="/evaldoc/assets/libs/fontawesome/css/regular.css">

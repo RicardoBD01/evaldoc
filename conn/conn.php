@@ -30,7 +30,7 @@ class Principal {
     public function registrarUsuario(string $nombre, string $email, string $password): bool {
         $hash = password_hash($password, PASSWORD_DEFAULT);
 
-        $sql = "INSERT INTO usuarios (nombre, email, password)
+        $sql = "INSERT INTO usuarios (nombre, correo, pass)
                 VALUES (:nombre, :email, :password)";
 
         $stmt = $this->query($sql, [
@@ -44,7 +44,7 @@ class Principal {
 
     // Ejemplo: obtener usuario por email
     public function obtenerUsuarioPorEmail(string $email): ?array {
-        $sql = "SELECT * FROM myapp_usuario WHERE correo_usuario = :email LIMIT 1";
+        $sql = "SELECT * FROM usuarios WHERE correo = :email LIMIT 1";
 
         $stmt = $this->query($sql, [':email' => $email]);
         $usuario = $stmt->fetch();
@@ -60,7 +60,7 @@ class Principal {
             return null;
         }
 
-        if (!password_verify($password, $usuario['password'])) {
+        if (!password_verify($password, $usuario['pass'])) {
             return null;
         }
 

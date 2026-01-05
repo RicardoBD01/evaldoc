@@ -20,8 +20,13 @@ $usuario = $principal->login($email, $password);
 
 if ($usuario) {
     session_start();
-    //$_SESSION['usuario_id'] = $usuario['id'];
-    //$_SESSION['nombre'] = $usuario['nombre'];
+    $_SESSION['usuario_id'] = $usuario['id'];
+    $_SESSION['nombre'] = $usuario['nombre'];
+    $_SESSION['amaterno'] = $usuario['amaterno'];
+    $_SESSION['apaterno'] = $usuario['apaterno'];
+    $_SESSION['correo'] = $usuario['correo'];
+    $_SESSION['rol'] = $usuario['rol'];
+    $_SESSION['login'] = 'ok';
 
     echo json_encode([
         "success" => true,
@@ -30,6 +35,6 @@ if ($usuario) {
 } else {
     echo json_encode([
         "success" => false,
-        "message" => "Correo o contraseña inválidos."
+        "message" => "Correo o contraseña incorrectos."
     ]);
 }
