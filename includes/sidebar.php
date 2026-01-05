@@ -13,7 +13,7 @@
         <nav class="sidebar-nav scroll-sidebar" data-simplebar="">
             <ul id="sidebarnav">
                 <li class="sidebar-item">
-                    <a class="sidebar-link" href="/evaldoc" aria-expanded="false">
+                    <a class="sidebar-link" href="/evaldoc/index.php?page=inicio" aria-expanded="false">
                         <i class="fa-regular fa-house"></i>
                         <span class="hide-menu">Inicio</span>
                     </a>
@@ -34,7 +34,7 @@
                                 </li>
 
                                 <li class="sidebar-item">
-                                    <a class="sidebar-link justify-content-between" href="#" aria-expanded="false">
+                                    <a class="sidebar-link justify-content-between" href="/evaldoc/index.php?page=usuarios" aria-expanded="false">
                                         <div class="d-flex align-items-center gap-3">
                                             <span class="d-flex">
                                                 <i class="ti ti-user-circle"></i>

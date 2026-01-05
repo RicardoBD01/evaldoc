@@ -5,10 +5,12 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../config.php';
 
-class Principal {
+class Principal
+{
     private PDO $pdo;
 
-    public function __construct() {
+    public function __construct()
+    {
         // Solo se llama una vez: aquí ya tenemos la conexión lista
         $this->pdo = db();
     }
@@ -16,7 +18,8 @@ class Principal {
     /**
      * Método interno para ejecutar consultas preparadas
      */
-    private function query(string $sql, array $params = []): PDOStatement {
+    private function query(string $sql, array $params = []): PDOStatement
+    {
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute($params);
         return $stmt;
@@ -27,7 +30,8 @@ class Principal {
        ===================== */
 
     // Ejemplo: registrar usuario
-    public function registrarUsuario(string $nombre, string $email, string $password): bool {
+    public function registrarUsuario(string $nombre, string $email, string $password): bool
+    {
         $hash = password_hash($password, PASSWORD_DEFAULT);
 
         $sql = "INSERT INTO usuarios (nombre, correo, pass)
@@ -43,7 +47,8 @@ class Principal {
     }
 
     // Ejemplo: obtener usuario por email
-    public function obtenerUsuarioPorEmail(string $email): ?array {
+    public function obtenerUsuarioPorEmail(string $email): ?array
+    {
         $sql = "SELECT * FROM usuarios WHERE correo = :email LIMIT 1";
 
         $stmt = $this->query($sql, [':email' => $email]);
@@ -53,7 +58,8 @@ class Principal {
     }
 
     // Ejemplo: login
-    public function login(string $email, string $password): ?array {
+    public function login(string $email, string $password): ?array
+    {
         $usuario = $this->obtenerUsuarioPorEmail($email);
 
         if (!$usuario) {
@@ -65,9 +71,27 @@ class Principal {
         }
 
         // Opcional: no devolver el hash
-        unset($usuario['password']);
+        unset($usuario['pass']);
         return $usuario;
     }
+
+    public function obtenerRoles(): ?array
+    {
+        $sql = "SELECT id, rol FROM roles ORDER BY rol ASC"; // roles: id, rol
+
+        try {
+            $stmt = $this->query($sql);
+            $roles = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            // Si no hay roles, devolvemos arreglo vacío (más cómodo que null)
+            return $roles ?: [];
+        } catch (PDOException $e) {
+            // En producción conviene loguear el error:
+            // error_log("Error obtenerRoles: " . $e->getMessage());
+            return null;
+        }
+    }
+
 
     // Aquí después podemos ir añadiendo:
     // actualizarUsuario(), eliminarUsuario(), listarUsuarios(), etc.
