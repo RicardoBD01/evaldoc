@@ -37,6 +37,7 @@ if (!isset($_SESSION['login']) || $_SESSION['login'] !== 'ok') {
             include BASE_PATH . "/includes/nav.php";
             ?>
             <!--  Header End -->
+            <!--  Index Start -->
             <div class="body-wrapper-inner">
                 <div class="container-fluid">
                     <!--  Row 1 -->
@@ -546,6 +547,7 @@ if (!isset($_SESSION['login']) || $_SESSION['login'] !== 'ok') {
                     </div>
                 </div>
             </div>
+            <!--  Index End -->
         </div>
     </div>
     <?php
