@@ -1,10 +1,3 @@
-<?php
-require_once $_SERVER['DOCUMENT_ROOT'] . "/evaldoc/conn/conn.php";
-
-$principal = new Principal();
-$usuarios = $principal->obtenerUsuarios();
-?>
-
 <nav style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
     <ol class="breadcrumb">
         <li class="breadcrumb-item"><a href="#">Inicio</a></li>
@@ -38,41 +31,45 @@ $usuarios = $principal->obtenerUsuarios();
                             <th scope="col">Acciones</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        <?php if (empty($usuarios)): ?>
-                            <tr>
-                                <td colspan="7" class="text-center text-muted">
-                                    No hay usuarios registrados
-                                </td>
-                            </tr>
-                        <?php else: ?>
-                            <?php foreach ($usuarios as $i => $u): ?>
-                                <tr>
-                                    <th scope="row"><?= $i + 1 ?></th>
-                                    <td><?= htmlspecialchars($u['nombre']) ?></td>
-                                    <td><?= htmlspecialchars($u['apaterno']) ?></td>
-                                    <td><?= htmlspecialchars($u['amaterno']) ?></td>
-                                    <td><?= htmlspecialchars($u['correo']) ?></td>
-                                    <td><?= htmlspecialchars($u['rol']) ?></td>
-                                    <td>
-                                        <!-- Botones de acción -->
-                                        <button class="btn btn-sm btn-info" data-id="<?= $u['id'] ?>">
-                                            <i class="fa-solid fa-key"></i>
-                                        </button>
-                                        <button class="btn btn-sm btn-warning" data-id="<?= $u['id'] ?>">
-                                            <i class="fa-regular fa-pen-to-square"></i>
-                                        </button>
-                                        <button class="btn btn-sm btn-danger" data-id="<?= $u['id'] ?>">
-                                            <i class="fa-regular fa-trash-can"></i>
-                                        </button>
-                                    </td>
-                                </tr>
-                            <?php endforeach; ?>
-                        <?php endif; ?>
+                    <tbody id="tbodyUsuarios">
+                        <tr>
+                            <td colspan="7" class="text-center text-muted">Cargando usuarios...</td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
+            <div class="row mb-3">
+                <a class="d-flex align-items-center gap-2 text-decoration-none" data-bs-toggle="collapse"
+                    href="#collapseDesactivados" role="button" aria-expanded="false"
+                    aria-controls="collapseDesactivados" id="toggleDesactivados">
 
+                    <i class="fa-solid fa-angle-right" id="iconDesactivados"></i>
+                    <span class="fw-semibold">Usuarios desactivados</span>
+                </a>
+            </div>
+            <div class="collapse" id="collapseDesactivados">
+                <div class="row mb-3">
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th scope="col">No.</th>
+                                <th scope="col">Nombre</th>
+                                <th scope="col">Apellido paterno</th>
+                                <th scope="col">Apellido materno</th>
+                                <th scope="col">Correo</th>
+                                <th scope="col">Rol</th>
+                                <th scope="col">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbodyUsuariosDesactivados">
+                            <tr>
+                                <td colspan="7" class="text-center text-muted">Despliega para cargar usuarios
+                                    desactivados…</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -85,6 +82,7 @@ $usuarios = $principal->obtenerUsuarios();
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
+                <input type="hidden" id="userId">
                 <div class="container">
                     <div class="row align-items-center">
                         <div id="mensajes"></div>
@@ -154,8 +152,82 @@ $usuarios = $principal->obtenerUsuarios();
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn btn-primary" id="btnGuardarUsuario">Insertar</button>
+                <button type="button" class="btn btn-primary" id="btnGuardarUsuario">Guardar</button>
             </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="passModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
+    aria-labelledby="passModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="passModalLabel">Cambiar contraseña</h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <div class="modal-body">
+                <div class="container">
+                    <div class="row align-items-center">
+                        <div id="mensajesPass" class="d-none"></div>
+
+                        <input type="hidden" id="passUserId">
+
+                        <div class="mb-3">
+                            <label for="inputNewPass" class="form-label">Nueva contraseña</label>
+                            <input type="password" class="form-control" id="inputNewPass" autocomplete="new-password"
+                                required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="inputNewPass2" class="form-label">Confirmar nueva contraseña</label>
+                            <input type="password" class="form-control" id="inputNewPass2" autocomplete="new-password"
+                                required>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="btnGuardarPass">Guardar</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="deleteModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
+    aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="deleteModalLabel">Confirmar eliminación</h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <div class="modal-body">
+                <div id="mensajesDelete" class="d-none"></div>
+
+                <input type="hidden" id="deleteUserId">
+
+                <p class="mb-0">
+                    ¿Estás seguro de desactivar este usuario?
+                    <br>
+                    <small class="text-muted">El usuario ya no aparecerá en la lista, pero se conservarán sus
+                        datos.</small>
+                </p>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-danger" id="btnConfirmarEliminar">
+                    Desactivar
+                </button>
+            </div>
+
         </div>
     </div>
 </div>
