@@ -76,7 +76,3 @@
     $pageScript = 'login.js';
     include BASE_PATH . "/includes/footer.php";
     ?>
-    <script src="/evaldoc/assets/js/login.js"></script>
-</body>
-
-</html>

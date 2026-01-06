@@ -32,9 +32,7 @@
             <div class="modal-body">
                 <div class="container">
                     <div class="row align-items-center">
-                        <div class="alert alert-danger" role="alert">
-                            A simple danger alert—check it out!
-                        </div>
+                        <div id="mensajes"></div>
                         <div class="col">
                             <div class="mb-3">
                                 <label for="inputNombre" class="form-label">Nombre(s)</label>
@@ -101,7 +99,7 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn btn-primary">Insertar</button>
+                <button type="button" class="btn btn-primary" id="btnGuardarUsuario">Insertar</button>
             </div>
         </div>
     </div>

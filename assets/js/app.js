@@ -24,7 +24,6 @@ function bindSidebarLinks() {
 }
 
 function loadPage(page, pushState) {
-    // ✅ SIEMPRE limpiar y mostrar loader
     $("#app-content").empty().html("<div class='p-3'>Cargando...</div>");
 
     $.ajax({
@@ -32,12 +31,12 @@ function loadPage(page, pushState) {
         method: "GET",
         data: { page: page },
         success: function (html) {
-            // ✅ Reemplazar contenido aunque sea vacío
             const trimmed = (html || "").trim();
             if (trimmed.length === 0) {
                 $("#app-content").html("<div class='p-3 text-muted'>Aún no hay contenido en esta sección.</div>");
             } else {
                 $("#app-content").html(html);
+                loadModuleScript(page);
             }
 
             if (pushState) {
@@ -45,7 +44,6 @@ function loadPage(page, pushState) {
             }
         },
         error: function (xhr) {
-            // ✅ En error también limpiar (para que no se quede usuarios)
             $("#app-content").html(
                 `<div class="p-3 text-danger">No se pudo cargar la sección (${xhr.status}).</div>`
             );
@@ -69,6 +67,45 @@ function setActiveLink(page) {
     $("a.js-nav").removeClass("active");
     $(`a.js-nav[data-page="${page}"]`).addClass("active");
 }
+
+function loadModuleScript(page) {
+    const map = {
+        usuarios: "/evaldoc/assets/js/usuarios.js",
+        materias: "/evaldoc/assets/js/materias.js",
+        encuesta: "/evaldoc/assets/js/encuesta.js",
+        // agrega más conforme crezcan
+    };
+
+    const src = map[page];
+    if (!src) return;
+
+    // Evita cargarlo más de una vez
+    if (document.querySelector(`script[data-module="${page}"]`)) {
+        // Si ya existe, solo re-inicializa handlers si el módulo lo define
+        if (window.Modules && typeof window.Modules[page] === "function") {
+            window.Modules[page]();
+        }
+        return;
+    }
+
+    const s = document.createElement("script");
+    s.src = src;
+    s.defer = true;
+    s.setAttribute("data-module", page);
+
+    s.onload = function () {
+        if (window.Modules && typeof window.Modules[page] === "function") {
+            window.Modules[page]();
+        }
+    };
+
+    s.onerror = function () {
+        console.error("No se pudo cargar el script del módulo:", src);
+    };
+
+    document.body.appendChild(s);
+}
+
 
 function initPageScripts(page) {
     // Aquí inicializas cosas específicas por pantalla

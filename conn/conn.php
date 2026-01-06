@@ -29,24 +29,46 @@ class Principal
        MÉTODOS CRUD BASE
        ===================== */
 
-    // Ejemplo: registrar usuario
-    public function registrarUsuario(string $nombre, string $email, string $password): bool
-    {
-        $hash = password_hash($password, PASSWORD_DEFAULT);
+    public function insertarUsuario(
+        string $nombre,
+        string $apaterno,
+        ?string $amaterno,
+        string $correo,
+        string $passHash,
+        int $rol
+    ): array {
 
-        $sql = "INSERT INTO usuarios (nombre, correo, pass)
-                VALUES (:nombre, :email, :password)";
+        $val = $this->validarCorreoUnico($correo);
+        if (!$val['ok']) {
+            return ['success' => false, 'message' => $val['message']];
+        }
 
-        $stmt = $this->query($sql, [
-            ':nombre' => $nombre,
-            ':email' => $email,
-            ':password' => $hash,
-        ]);
+        try {
+            $sql = "INSERT INTO usuarios (nombre, apaterno, amaterno, correo, pass, rol)
+                VALUES (:nombre, :apaterno, :amaterno, :correo, :pass, :rol)";
 
-        return $stmt->rowCount() > 0;
+            $this->query($sql, [
+                ':nombre' => $nombre,
+                ':apaterno' => $apaterno,
+                ':amaterno' => $amaterno,
+                ':correo' => $correo,
+                ':pass' => $passHash,
+                ':rol' => $rol,
+            ]);
+
+            return ['success' => true, 'message' => 'Usuario agregado correctamente.'];
+
+        } catch (PDOException $e) {
+            // Backup por si la UNIQUE constraint dispara
+            if ($e->getCode() === '23505') {
+                return ['success' => false, 'message' => 'El correo ya está registrado.'];
+            }
+            return ['success' => false, 'message' => 'Error al insertar el usuario.'];
+        }
     }
 
-    // Ejemplo: obtener usuario por email
+
+    // Obtener usuario por email
     public function obtenerUsuarioPorEmail(string $email): ?array
     {
         $sql = "SELECT * FROM usuarios WHERE correo = :email LIMIT 1";
@@ -57,7 +79,7 @@ class Principal
         return $usuario ?: null;
     }
 
-    // Ejemplo: login
+    // Login
     public function login(string $email, string $password): ?array
     {
         $usuario = $this->obtenerUsuarioPorEmail($email);
@@ -70,11 +92,11 @@ class Principal
             return null;
         }
 
-        // Opcional: no devolver el hash
         unset($usuario['pass']);
         return $usuario;
     }
 
+    // Obtener roles
     public function obtenerRoles(): ?array
     {
         $sql = "SELECT id, rol FROM roles ORDER BY rol ASC"; // roles: id, rol
@@ -92,7 +114,36 @@ class Principal
         }
     }
 
+    // Verificar si correo ya existe en BD
+    public function correoExiste(string $correo, ?int $excludeUserId = null): bool
+    {
+        $sql = "SELECT 1 FROM usuarios WHERE correo = :correo";
+        $params = [':correo' => $correo];
 
-    // Aquí después podemos ir añadiendo:
-    // actualizarUsuario(), eliminarUsuario(), listarUsuarios(), etc.
+        // Para edición: ignorar el mismo usuario
+        if ($excludeUserId !== null) {
+            $sql .= " AND id <> :id";
+            $params[':id'] = $excludeUserId;
+        }
+
+        $sql .= " LIMIT 1";
+
+        $stmt = $this->query($sql, $params);
+        return (bool) $stmt->fetchColumn();
+    }
+
+    // Valida que no se inserte correo duplicado
+    public function validarCorreoUnico(string $correo, ?int $excludeUserId = null): array
+    {
+        if (!filter_var($correo, FILTER_VALIDATE_EMAIL)) {
+            return ['ok' => false, 'message' => 'El correo no es válido.'];
+        }
+
+        if ($this->correoExiste($correo, $excludeUserId)) {
+            return ['ok' => false, 'message' => 'El correo ya está registrado.'];
+        }
+
+        return ['ok' => true, 'message' => 'OK'];
+    }
+
 }
