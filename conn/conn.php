@@ -146,4 +146,28 @@ class Principal
         return ['ok' => true, 'message' => 'OK'];
     }
 
+    // Obtiene todos los usuarios
+    public function obtenerUsuarios(): array
+    {
+        $sql = "
+        SELECT 
+            u.id,
+            u.nombre,
+            u.apaterno,
+            u.amaterno,
+            u.correo,
+            r.rol
+        FROM usuarios u
+        INNER JOIN roles r ON r.id = u.rol
+        ORDER BY u.id ASC
+    ";
+
+        try {
+            $stmt = $this->query($sql);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+        } catch (PDOException $e) {
+            // En producción: error_log($e->getMessage());
+            return [];
+        }
+    }
 }

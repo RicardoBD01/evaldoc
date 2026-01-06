@@ -1,3 +1,10 @@
+<?php
+require_once $_SERVER['DOCUMENT_ROOT'] . "/evaldoc/conn/conn.php";
+
+$principal = new Principal();
+$usuarios = $principal->obtenerUsuarios();
+?>
+
 <nav style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
     <ol class="breadcrumb">
         <li class="breadcrumb-item"><a href="#">Inicio</a></li>
@@ -18,6 +25,54 @@
                         data-bs-target="#insertModal"><i class="fa-solid fa-plus"></i> Agregar usuario</button>
                 </div>
             </div>
+            <div class="row mb-3">
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th scope="col">No.</th>
+                            <th scope="col">Nombre</th>
+                            <th scope="col">Apellido paterno</th>
+                            <th scope="col">Apellido materno</th>
+                            <th scope="col">Correo</th>
+                            <th scope="col">Rol</th>
+                            <th scope="col">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php if (empty($usuarios)): ?>
+                            <tr>
+                                <td colspan="7" class="text-center text-muted">
+                                    No hay usuarios registrados
+                                </td>
+                            </tr>
+                        <?php else: ?>
+                            <?php foreach ($usuarios as $i => $u): ?>
+                                <tr>
+                                    <th scope="row"><?= $i + 1 ?></th>
+                                    <td><?= htmlspecialchars($u['nombre']) ?></td>
+                                    <td><?= htmlspecialchars($u['apaterno']) ?></td>
+                                    <td><?= htmlspecialchars($u['amaterno']) ?></td>
+                                    <td><?= htmlspecialchars($u['correo']) ?></td>
+                                    <td><?= htmlspecialchars($u['rol']) ?></td>
+                                    <td>
+                                        <!-- Botones de acción -->
+                                        <button class="btn btn-sm btn-info" data-id="<?= $u['id'] ?>">
+                                            <i class="fa-solid fa-key"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-warning" data-id="<?= $u['id'] ?>">
+                                            <i class="fa-regular fa-pen-to-square"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-danger" data-id="<?= $u['id'] ?>">
+                                            <i class="fa-regular fa-trash-can"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
+
         </div>
     </div>
 </div>
@@ -65,7 +120,7 @@
                         <div class="col">
                             <div class="mb-3">
                                 <label for="inputPass" class="form-label">Contraseña</label>
-                                <input type="text" class="form-control" id="inputPass" required>
+                                <input type="password" class="form-control" id="inputPass" required>
                             </div>
                         </div>
                         <div class="col">
