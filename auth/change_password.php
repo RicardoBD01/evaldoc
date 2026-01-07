@@ -4,7 +4,7 @@ declare(strict_types=1);
 header("Content-Type: application/json; charset=utf-8");
 
 require_once $_SERVER['DOCUMENT_ROOT'] . "/evaldoc/config.php";
-require_once $_SERVER['DOCUMENT_ROOT'] . "/evaldoc/app/Services/AuthService.php";
+require_once $_SERVER['DOCUMENT_ROOT'] . "/evaldoc/services/AuthService.php";
 
 session_start();
 

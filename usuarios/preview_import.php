@@ -152,6 +152,8 @@ try {
         if (!isset($departamentos[$depKey])) {
             $departamentos[$depKey] = [
                 "nombre" => $depKey,
+                "warnings" => [],
+                "warnings_count" => 0,
                 "docentes" => []
             ];
         }
@@ -161,10 +163,13 @@ try {
                 "nombre" => $docNombre ?: 'DOCENTE DESCONOCIDO',
                 "email" => $docEmail,
                 "warnings" => [],
+                "warnings_count" => 0,
                 "ofertas" => []
             ];
             if ($wDocEmail) {
                 $departamentos[$depKey]["docentes"][$docKey]["warnings"][] = $wDocEmail;
+                $departamentos[$depKey]["docentes"][$docKey]["warnings_count"]++;
+                $departamentos[$depKey]["warnings_count"]++;
             }
         }
 
@@ -176,6 +181,7 @@ try {
                 "materia_nombre" => $materiaNombre,
                 "grupo" => $grupo,
                 "warnings" => [],
+                "warnings_count" => 0,
                 "alumnos" => []
             ];
         }
@@ -185,6 +191,9 @@ try {
         $alumnoWarnings = [];
         if ($wAluEmail) {
             $alumnoWarnings[] = $wAluEmail;
+            $ofertaRef["warnings_count"]++;
+            $docRef["warnings_count"]++;
+            $departamentos[$depKey]["warnings_count"]++;
         }
 
         $ofertaRef["alumnos"][] = [
@@ -192,6 +201,8 @@ try {
             "nombre" => $aluNombre,
             "email" => $aluEmail,
             "warnings" => $alumnoWarnings,
+            "warnings_count" => count($alumnoWarnings),
+            "has_warnings" => count($alumnoWarnings) > 0,
             "row" => $r
         ];
     }
@@ -213,10 +224,12 @@ try {
             }
 
             $docData["ofertas"] = $ofArr;
+            $docData["has_warnings"] = ((int)($docData["warnings_count"] ?? 0)) > 0;
             $docArr[] = $docData;
         }
 
         $depData["docentes"] = $docArr;
+        $depData["has_warnings"] = ((int)($depData["warnings_count"] ?? 0)) > 0;
         $departamentosArr[] = $depData;
     }
 
