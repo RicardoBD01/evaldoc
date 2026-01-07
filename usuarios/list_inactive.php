@@ -1,10 +1,10 @@
 <?php
 declare(strict_types=1);
 
-require_once $_SERVER['DOCUMENT_ROOT'] . "/evaldoc/conn/conn.php";
+require_once $_SERVER['DOCUMENT_ROOT'] . "/evaldoc/repositories/UserRepository.php";
 
-$principal = new Principal();
-$usuarios = $principal->obtenerUsuariosDesactivados();
+$repo = new UserRepository();
+$usuarios = $repo->getAllInactive();
 
 if (empty($usuarios)) {
     echo "<tr><td colspan='7' class='text-center text-muted'>No hay usuarios desactivados</td></tr>";
@@ -21,15 +21,10 @@ foreach ($usuarios as $i => $u) {
     echo "<td>" . htmlspecialchars($u['amaterno'] ?? '') . "</td>";
     echo "<td>" . htmlspecialchars($u['correo']) . "</td>";
     echo "<td>" . htmlspecialchars($u['rol']) . "</td>";
-
-    // Acción: Reactivar
     echo "<td class='text-center'>
-            <button class='btn btn-sm btn-success btnReactivarUsuario'
-                    data-id='{$id}'
-                    title='Reactivar usuario'>
+            <button class='btn btn-sm btn-success btnReactivarUsuario' data-id='{$id}' title='Reactivar usuario'>
               <i class='fa-solid fa-rotate-left'></i>
             </button>
           </td>";
-
     echo "</tr>";
 }

@@ -18,6 +18,35 @@ function mainUsuarios() {
     bindReactivarUsuario();
 
     initDesactivadosCollapse();
+    initImportPreview();
+}
+
+function loadScriptOnce(src, key) {
+    window.__loadedScripts = window.__loadedScripts || {};
+    if (window.__loadedScripts[key]) return window.__loadedScripts[key];
+
+    window.__loadedScripts[key] = new Promise((resolve, reject) => {
+        const s = document.createElement("script");
+        s.src = src;
+        s.defer = true;
+        s.onload = () => resolve(true);
+        s.onerror = () => reject(new Error("No se pudo cargar: " + src));
+        document.body.appendChild(s);
+    });
+
+    return window.__loadedScripts[key];
+}
+
+function initImportPreview() {
+    loadScriptOnce("/evaldoc/assets/js/import_usuarios.js", "import_usuarios")
+        .then(() => {
+            if (window.ImportUsuarios && typeof window.ImportUsuarios.init === "function") {
+                window.ImportUsuarios.init(); // ✅ binds off/on
+            } else {
+                console.warn("import_usuarios.js cargó pero no expone window.ImportUsuarios.init()");
+            }
+        })
+        .catch(console.error);
 }
 
 function bindSubmitFormularioUsuario() {

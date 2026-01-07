@@ -1,17 +1,21 @@
 $(main);
 
 function main() {
+    if (window.FORCE_CHANGE_PASS) {
+        initForceChangePassword();
+        return; // <-- bloquea carga SPA y navegación
+    }
+
     bindSidebarLinks();
     handleBackForward();
 
-    // Si entras directo a /index.php?page=usuarios, carga esa sección
     const params = new URLSearchParams(window.location.search);
     const page = params.get("page") || "inicio";
     loadPage(page, false);
 }
 
+
 function bindSidebarLinks() {
-    // Delegación por si el sidebar se re-renderiza
     $(document).on("click", "a.js-nav", function (e) {
         e.preventDefault();
 
@@ -29,34 +33,37 @@ function loadPage(page, pushState) {
     $.ajax({
         url: "/evaldoc/pages/load.php",
         method: "GET",
-        data: { page: page },
-        success: function (html) {
+        data: { page },
+
+        success: function (html, _status, xhr) {
             const trimmed = (html || "").trim();
+
             if (trimmed.length === 0) {
                 $("#app-content").html("<div class='p-3 text-muted'>Aún no hay contenido en esta sección.</div>");
             } else {
                 $("#app-content").html(html);
-                loadModuleScript(page);
+
+                // ✅ Script sugerido por backend (ej. "usuarios.js")
+                const pageScript = xhr.getResponseHeader("X-Page-Script") || "";
+                loadModuleScript(page, pageScript);
             }
 
             if (pushState) {
                 history.pushState({ page }, "", `/evaldoc/index.php?page=${encodeURIComponent(page)}`);
             }
         },
+
         error: function (xhr) {
-            $("#app-content").html(
-                `<div class="p-3 text-danger">No se pudo cargar la sección (${xhr.status}).</div>`
-            );
+            $("#app-content").html(`<div class="p-3 text-danger">No se pudo cargar la sección (${xhr.status}).</div>`);
         }
     });
 }
-
 
 function handleBackForward() {
     window.addEventListener("popstate", function (event) {
         const page = (event.state && event.state.page)
             ? event.state.page
-            : (new URLSearchParams(window.location.search).get("page") || "dashboard");
+            : (new URLSearchParams(window.location.search).get("page") || "inicio");
 
         loadPage(page, false);
         setActiveLink(page);
@@ -68,35 +75,43 @@ function setActiveLink(page) {
     $(`a.js-nav[data-page="${page}"]`).addClass("active");
 }
 
-function loadModuleScript(page) {
-    const map = {
-        usuarios: "/evaldoc/assets/js/usuarios.js",
-        materias: "/evaldoc/assets/js/materias.js",
-        encuesta: "/evaldoc/assets/js/encuesta.js",
-        // agrega más conforme crezcan
-    };
+function loadModuleScript(page, pageScriptFromHeader) {
+    let src = "";
 
-    const src = map[page];
-    if (!src) return;
+    // ✅ Prioridad: header X-Page-Script
+    if (pageScriptFromHeader && pageScriptFromHeader.trim() !== "") {
+        src = `/evaldoc/assets/js/${pageScriptFromHeader.trim()}`;
+    } else {
+        // (fallback opcional)
+        const map = {
+            usuarios: "/evaldoc/assets/js/usuarios.js",
+            materias: "/evaldoc/assets/js/materias.js",
+            encuesta: "/evaldoc/assets/js/encuesta.js",
+        };
+        src = map[page] || "";
+    }
 
-    // Evita cargarlo más de una vez
-    if (document.querySelector(`script[data-module="${page}"]`)) {
-        // Si ya existe, solo re-inicializa handlers si el módulo lo define
-        if (window.Modules && typeof window.Modules[page] === "function") {
-            window.Modules[page]();
-        }
+    if (!src) {
+        // Si no hay script, aún podemos intentar re-init si existe
+        if (window.Modules && typeof window.Modules[page] === "function") window.Modules[page]();
+        return;
+    }
+
+    const key = pageScriptFromHeader?.trim() || page;
+
+    // Evitar cargar 2 veces el mismo script
+    if (document.querySelector(`script[data-module="${key}"]`)) {
+        if (window.Modules && typeof window.Modules[page] === "function") window.Modules[page]();
         return;
     }
 
     const s = document.createElement("script");
     s.src = src;
     s.defer = true;
-    s.setAttribute("data-module", page);
+    s.setAttribute("data-module", key);
 
     s.onload = function () {
-        if (window.Modules && typeof window.Modules[page] === "function") {
-            window.Modules[page]();
-        }
+        if (window.Modules && typeof window.Modules[page] === "function") window.Modules[page]();
     };
 
     s.onerror = function () {
@@ -106,9 +121,56 @@ function loadModuleScript(page) {
     document.body.appendChild(s);
 }
 
+function initForceChangePassword() {
+    // Mostrar modal
+    const modalEl = document.getElementById("forcePassModal");
+    if (!modalEl) return;
 
-function initPageScripts(page) {
-    // Aquí inicializas cosas específicas por pantalla
-    // Ej: si usuarios necesita DataTables, etc.
-    // if (page === "usuarios") initUsuarios();
+    const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+    modal.show();
+
+    // Bloquear clicks en sidebar/app (por si acaso)
+    document.querySelectorAll("a.js-nav, button, a").forEach(el => {
+        if (el.closest("#forcePassModal")) return;
+    });
+
+    $("#btnForcePassSave").off("click").on("click", function () {
+        const newPass = $("#newPass").val();
+        const confirmPass = $("#confirmPass").val();
+
+        const msg = $("#forcePassMsg");
+        msg.html("");
+
+        if (!newPass || !confirmPass) {
+            msg.html(`<div class="alert alert-warning py-2">Llena todos los campos.</div>`);
+            return;
+        }
+        if (newPass !== confirmPass) {
+            msg.html(`<div class="alert alert-warning py-2">Las contraseñas no coinciden.</div>`);
+            return;
+        }
+        if (newPass.length < 8) {
+            msg.html(`<div class="alert alert-warning py-2">Mínimo 8 caracteres.</div>`);
+            return;
+        }
+
+        $.ajax({
+            url: "/evaldoc/auth/change_password.php",
+            type: "POST",
+            data: { new_pass: newPass, confirm_pass: confirmPass },
+            success: function (resp) {
+                if (resp.success) {
+                    msg.html(`<div class="alert alert-success py-2">${resp.message}</div>`);
+                    // recargar ya sin bloqueo
+                    setTimeout(() => window.location.href = "/evaldoc", 600);
+                } else {
+                    msg.html(`<div class="alert alert-danger py-2">${resp.message}</div>`);
+                }
+            },
+            error: function () {
+                msg.html(`<div class="alert alert-danger py-2">Error de conexión.</div>`);
+            }
+        });
+    });
 }
+

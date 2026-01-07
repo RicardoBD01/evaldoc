@@ -12,7 +12,7 @@
                     <h5>Gestión de usuarios</h5>
                 </div>
                 <div class="col-auto">
-                    <button type="button" class="btn btn-outline-dark"><i class="fa-regular fa-file-excel"></i> Importar
+                    <button type="button" class="btn btn-outline-dark" id="btnAbrirImportModal"><i class="fa-regular fa-file-excel"></i> Importar
                         usuarios</button>
                     <button type="button" class="btn btn-outline-dark" data-bs-toggle="modal"
                         data-bs-target="#insertModal"><i class="fa-solid fa-plus"></i> Agregar usuario</button>
@@ -228,6 +228,91 @@
                 </button>
             </div>
 
+        </div>
+    </div>
+</div>
+<!-- Modal: Vista previa importación -->
+<div class="modal fade" id="importPreviewModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
+    aria-labelledby="importPreviewModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="importPreviewModalLabel">
+                    Vista previa de importación
+                </h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <div class="modal-body">
+                <!-- Controles -->
+                <div class="d-flex flex-wrap gap-2 align-items-center mb-3">
+                    <input class="form-control" type="file" id="excelImportFile" accept=".xlsx,.xls"
+                        style="max-width: 360px;">
+                    <button class="btn btn-primary" id="btnCargarPreview">
+                        <i class="fa-solid fa-magnifying-glass"></i> Generar vista previa
+                    </button>
+                    <div class="ms-auto text-muted" id="importFileName"></div>
+                </div>
+
+                <!-- Mensajes -->
+                <div id="importMensajes" class="d-none"></div>
+
+                <!-- Resumen -->
+                <div class="row g-2 mb-3" id="importResumen" style="display:none;">
+                    <div class="col-md-3">
+                        <div class="border rounded p-2">
+                            <div class="text-muted small">Periodo</div>
+                            <div class="fw-semibold" id="resPeriodo">-</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="border rounded p-2">
+                            <div class="text-muted small">Departamentos</div>
+                            <div class="fw-semibold" id="resDepartamentos">-</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="border rounded p-2">
+                            <div class="text-muted small">Docentes</div>
+                            <div class="fw-semibold" id="resDocentes">-</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="border rounded p-2">
+                            <div class="text-muted small">Registros (filas)</div>
+                            <div class="fw-semibold" id="resFilas">-</div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-3">
+                        <div class="border rounded p-2">
+                            <div class="text-muted small">Ofertas (Materia+Grupo)</div>
+                            <div class="fw-semibold" id="resOfertas">-</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="border rounded p-2">
+                            <div class="text-muted small">Alumnos únicos</div>
+                            <div class="fw-semibold" id="resAlumnosUnicos">-</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="border rounded p-2">
+                            <div class="text-muted small">Advertencias</div>
+                            <div class="fw-semibold" id="resWarnings">-</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Acordeón -->
+                <div id="importAccordionContainer" class="accordion"></div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                <!-- Más adelante aquí pondrás "Confirmar importación" -->
+            </div>
         </div>
     </div>
 </div>

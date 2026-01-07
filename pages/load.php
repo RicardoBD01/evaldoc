@@ -4,17 +4,17 @@ declare(strict_types=1);
 
 header('Content-Type: text/html; charset=utf-8');
 
-$page = $_GET['page'] ?? 'dashboard';
+$page = $_GET['page'] ?? 'inicio';
 
-/**
- * Lista blanca: SOLO permitimos estas páginas
- * (evita LFI / que pidan cualquier archivo del server)
- */
 $routes = [
-    'usuarios' => __DIR__ . '/../usuarios/index.php',
-    'inicio' => __DIR__ . '/../pages/inicio.php',
-    // agrega más:
-    // 'materias'  => __DIR__ . '/../materias/index.php',
+    'usuarios' => [
+        'view' => __DIR__ . '/../usuarios/index.php',
+        'script' => 'usuarios.js',
+    ],
+    'inicio' => [
+        'view' => __DIR__ . '/../pages/inicio.php',
+        'script' => null,
+    ],
 ];
 
 if (!isset($routes[$page])) {
@@ -23,4 +23,11 @@ if (!isset($routes[$page])) {
     exit;
 }
 
-require $routes[$page];
+$pageScript = $routes[$page]['script'] ?? null;
+
+// ✅ Si lo estás cargando por AJAX, este header le dice a app.js qué cargar
+if (!empty($pageScript)) {
+    header('X-Page-Script: ' . $pageScript);
+}
+
+require $routes[$page]['view'];

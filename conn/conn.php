@@ -112,7 +112,8 @@ class Principal
                         correo = :correo,
                         rol = :rol,
                         pass = :pass
-                    WHERE id = :id";
+                    WHERE id = :id
+                    AND activo = true";
                 $params = [
                     ':nombre' => $nombre,
                     ':apaterno' => $apaterno,
@@ -129,7 +130,8 @@ class Principal
                         amaterno = :amaterno,
                         correo = :correo,
                         rol = :rol
-                    WHERE id = :id";
+                    WHERE id = :id
+                    AND activo = true";
                 $params = [
                     ':nombre' => $nombre,
                     ':apaterno' => $apaterno,
@@ -141,6 +143,10 @@ class Principal
             }
 
             $stmt = $this->query($sql, $params);
+
+            if ($stmt->rowCount() === 0) {
+                return ["success" => false, "message" => "El usuario no existe o está desactivado."];
+            }
 
             return [
                 "success" => true,
@@ -165,13 +171,15 @@ class Principal
     public function actualizarContrasenaUsuario(int $id, string $passHash): array
     {
         try {
-            $sql = "UPDATE usuarios SET pass = :pass WHERE id = :id";
+            $sql = "UPDATE usuarios SET pass = :pass WHERE id = :id AND activo = true";
             $stmt = $this->query($sql, [
                 ':pass' => $passHash,
                 ':id' => $id,
             ]);
 
-            // rowCount puede ser 0 si el id no existe o si el valor coincide (raro), así que puedes validar existencia si quieres
+            if ($stmt->rowCount() === 0) {
+                return ["success" => false, "message" => "El usuario no existe o está desactivado."];
+            }
             return [
                 "success" => true,
                 "message" => "Contraseña actualizada correctamente."
@@ -292,6 +300,7 @@ class Principal
         $sql = "SELECT id, nombre, apaterno, amaterno, correo, rol
                 FROM usuarios
                 WHERE id = :id
+                AND activo = true
                 LIMIT 1";
 
         $stmt = $this->query($sql, [':id' => $id]);
@@ -305,7 +314,7 @@ class Principal
      */
     public function obtenerUsuarioPorEmail(string $email): ?array
     {
-        $sql = "SELECT * FROM usuarios WHERE correo = :email LIMIT 1";
+        $sql = "SELECT * FROM usuarios WHERE correo = :email AND activo = true LIMIT 1";
 
         $stmt = $this->query($sql, [':email' => $email]);
         $usuario = $stmt->fetch();
@@ -364,7 +373,7 @@ class Principal
      */
     public function correoExiste(string $correo, ?int $excludeUserId = null): bool
     {
-        $sql = "SELECT 1 FROM usuarios WHERE correo = :correo";
+        $sql = "SELECT 1 FROM usuarios WHERE correo = :correo AND activo = true";
         $params = [':correo' => $correo];
 
         // Para edición: ignorar el mismo usuario

@@ -28,7 +28,11 @@ function realizarLogin() {
         processData: false,
         success: function (response) {
             if (response.success) {
-                window.location.href = '/evaldoc';
+                if (response.must_change_pass) {
+                    window.location.href = "/evaldoc/index.php?forceChange=1";
+                } else {
+                    window.location.href = "/evaldoc";
+                }
             } else {
                 mostrarError('danger', response.message);
             }
@@ -49,14 +53,14 @@ function mostrarError(tipo, texto) {
 
     mensajes.setAttribute('class', 'd-none')
 
-    if(tipo == 'success') icon = '<i class="fa-solid fa-circle-check"></i>';
-    else if(tipo == 'warning') icon = '<i class="fa-solid fa-triangle-exclamation"></i>';
-    else if(tipo == 'danger') icon = '<i class="fa-solid fa-circle-xmark"></i>';
+    if (tipo == 'success') icon = '<i class="fa-solid fa-circle-check"></i>';
+    else if (tipo == 'warning') icon = '<i class="fa-solid fa-triangle-exclamation"></i>';
+    else if (tipo == 'danger') icon = '<i class="fa-solid fa-circle-xmark"></i>';
 
-    let alert = '<div class="alert alert-'+ tipo + '" role="alert">' +
-                    icon + ' ' + texto +
-                '</div>';
-    
+    let alert = '<div class="alert alert-' + tipo + '" role="alert">' +
+        icon + ' ' + texto +
+        '</div>';
+
     mensajes.setAttribute('class', '');
     mensajes.innerHTML = alert;
 }
