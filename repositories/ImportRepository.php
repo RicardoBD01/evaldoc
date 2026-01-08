@@ -230,4 +230,31 @@ class ImportRepository
         );
         return $stmt->rowCount(); // 1 si insertó, 0 si ya existía
     }
+
+    public function getErroresLote(int $loteId, int $limit = 200): array
+    {
+        $sql = "
+            SELECT
+                row_num,
+                materia_clave,
+                grupo,
+                profesor_nombre,
+                matricula,
+                alumno_nombre,
+                error
+            FROM import_registros
+            WHERE lote_id = :id
+            AND error IS NOT NULL
+            ORDER BY row_num ASC
+            LIMIT $limit
+        ";
+
+        try {
+            $stmt = $this->query($sql, [':id' => $loteId]);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+        } catch (PDOException $e) {
+            return [];
+        }
+    }
+
 }

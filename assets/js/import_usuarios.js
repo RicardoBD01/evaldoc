@@ -1,6 +1,10 @@
 (function () {
     window.ImportUsuarios = window.ImportUsuarios || {};
 
+    let selectedFile = null;
+    let lastPeriodo = "2025-1";
+    let lastLoteId = null;
+
     function mostrarErrorImport(tipo, texto) {
         const el = document.getElementById("importMensajes");
         if (!el) return;
@@ -18,6 +22,35 @@
     `;
     }
 
+    function esc(s) {
+        return String(s ?? "")
+            .replaceAll("&", "&amp;")
+            .replaceAll("<", "&lt;")
+            .replaceAll(">", "&gt;")
+            .replaceAll('"', "&quot;")
+            .replaceAll("'", "&#039;");
+    }
+
+    function setImportEnabled(enabled) {
+        const btn = document.getElementById("btnEjecutarImport");
+        if (!btn) return;
+        btn.disabled = !enabled;
+    }
+
+    function resetResultUI() {
+        lastLoteId = null;
+
+        const loading = document.getElementById("importLoading");
+        const result = document.getElementById("importResult");
+        const errorsBox = document.getElementById("importErrorsBox");
+        const tbody = document.getElementById("importErrorsTbody");
+
+        if (loading) loading.classList.add("d-none");
+        if (result) result.classList.add("d-none");
+        if (errorsBox) errorsBox.classList.add("d-none");
+        if (tbody) tbody.innerHTML = "";
+    }
+
     function clearImportUI() {
         const mensajes = document.getElementById("importMensajes");
         const acc = document.getElementById("importAccordionContainer");
@@ -29,6 +62,9 @@
         }
         if (acc) acc.innerHTML = "";
         if (resumen) resumen.style.display = "none";
+
+        resetResultUI();
+        setImportEnabled(false);
     }
 
     function setResumen(data) {
@@ -50,15 +86,6 @@
         set("resWarnings", data.summary?.warnings ?? "0");
     }
 
-    function esc(s) {
-        return String(s ?? "")
-            .replaceAll("&", "&amp;")
-            .replaceAll("<", "&lt;")
-            .replaceAll(">", "&gt;")
-            .replaceAll('"', "&quot;")
-            .replaceAll("'", "&#039;");
-    }
-
     function renderAccordion(data) {
         const container = document.getElementById("importAccordionContainer");
         if (!container) return;
@@ -66,7 +93,6 @@
         container.innerHTML = "";
         const depAccordionId = "accDeps";
 
-        // Helpers UI
         const warnCount = (x) => Number(x?.warnings_count || 0);
 
         const warnBadge = (n) => {
@@ -76,11 +102,9 @@
         };
 
         const itemWarnClass = (n) => (Number(n || 0) > 0 ? "border border-warning-subtle" : "");
-
-        // Track de collapse IDs que deben abrirse automáticamente
         const autoOpen = new Set();
 
-        data.departamentos.forEach((dep, depIdx) => {
+        (data.departamentos || []).forEach((dep, depIdx) => {
             const depId = `dep_${depIdx}`;
             const depCollapse = `collapse_${depId}`;
             const depWarn = warnCount(dep);
@@ -91,30 +115,29 @@
             const depItem = document.createElement("div");
             depItem.className = `accordion-item ${itemWarnClass(depWarn)}`;
             depItem.innerHTML = `
-      <h2 class="accordion-header" id="heading_${depId}">
-        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
-          data-bs-target="#${depCollapse}" aria-expanded="false" aria-controls="${depCollapse}">
-          ${esc(dep.nombre)}
-          <span class="ms-2 text-muted small">(${docentesCount} docentes, ${ofertasCount} ofertas)</span>
-          ${warnBadge(depWarn)}
-        </button>
-      </h2>
+        <h2 class="accordion-header" id="heading_${depId}">
+          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+            data-bs-target="#${depCollapse}" aria-expanded="false" aria-controls="${depCollapse}">
+            ${esc(dep.nombre)}
+            <span class="ms-2 text-muted small">(${docentesCount} docentes, ${ofertasCount} ofertas)</span>
+            ${warnBadge(depWarn)}
+          </button>
+        </h2>
 
-      <div id="${depCollapse}" class="accordion-collapse collapse" aria-labelledby="heading_${depId}"
-        data-bs-parent="#${depAccordionId}">
-        <div class="accordion-body">
-          <div class="accordion" id="accDoc_${depId}"></div>
+        <div id="${depCollapse}" class="accordion-collapse collapse" aria-labelledby="heading_${depId}"
+          data-bs-parent="#${depAccordionId}">
+          <div class="accordion-body">
+            <div class="accordion" id="accDoc_${depId}"></div>
+          </div>
         </div>
-      </div>
-    `;
+      `;
             container.appendChild(depItem);
 
-            // Si el departamento tiene warnings, márcalo para abrir
             if (depWarn > 0) autoOpen.add(depCollapse);
 
             const docContainer = depItem.querySelector(`#accDoc_${depId}`);
 
-            dep.docentes.forEach((doc, docIdx) => {
+            (dep.docentes || []).forEach((doc, docIdx) => {
                 const docId = `${depId}_doc_${docIdx}`;
                 const docCollapse = `collapse_${docId}`;
                 const docWarn = warnCount(doc);
@@ -128,26 +151,26 @@
                 const docItem = document.createElement("div");
                 docItem.className = `accordion-item ${itemWarnClass(docWarn)}`;
                 docItem.innerHTML = `
-        <h2 class="accordion-header" id="heading_${docId}">
-          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
-            data-bs-target="#${docCollapse}" aria-expanded="false" aria-controls="${docCollapse}">
-            ${esc(doc.nombre)} ${docEmailTxt}
-            <span class="ms-2 text-muted small">(${ofCount} ofertas)</span>
-            ${warnBadge(docWarn)}
-          </button>
-        </h2>
+          <h2 class="accordion-header" id="heading_${docId}">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+              data-bs-target="#${docCollapse}" aria-expanded="false" aria-controls="${docCollapse}">
+              ${esc(doc.nombre)} ${docEmailTxt}
+              <span class="ms-2 text-muted small">(${ofCount} ofertas)</span>
+              ${warnBadge(docWarn)}
+            </button>
+          </h2>
 
-        <div id="${docCollapse}" class="accordion-collapse collapse" aria-labelledby="heading_${docId}"
-          data-bs-parent="#accDoc_${depId}">
-          <div class="accordion-body">
-            ${doc.warnings?.length
+          <div id="${docCollapse}" class="accordion-collapse collapse" aria-labelledby="heading_${docId}"
+            data-bs-parent="#accDoc_${depId}">
+            <div class="accordion-body">
+              ${doc.warnings?.length
                         ? `<div class="alert alert-warning py-2 mb-2"><b>Advertencias docente:</b> ${esc(doc.warnings.join(", "))}</div>`
                         : ""
                     }
-            <div class="accordion" id="accOf_${docId}"></div>
+              <div class="accordion" id="accOf_${docId}"></div>
+            </div>
           </div>
-        </div>
-      `;
+        `;
                 docContainer.appendChild(docItem);
 
                 if (docWarn > 0) {
@@ -157,7 +180,7 @@
 
                 const ofContainer = docItem.querySelector(`#accOf_${docId}`);
 
-                doc.ofertas.forEach((of, ofIdx) => {
+                (doc.ofertas || []).forEach((of, ofIdx) => {
                     const ofId = `${docId}_of_${ofIdx}`;
                     const ofCollapse = `collapse_${ofId}`;
                     const ofWarn = warnCount(of);
@@ -168,40 +191,39 @@
                     const ofItem = document.createElement("div");
                     ofItem.className = `accordion-item ${itemWarnClass(ofWarn)}`;
                     ofItem.innerHTML = `
-          <h2 class="accordion-header" id="heading_${ofId}">
-            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
-              data-bs-target="#${ofCollapse}" aria-expanded="false" aria-controls="${ofCollapse}">
-              ${ofTitle}
-              <span class="ms-2 text-muted small">(${alumnosCount} alumnos)</span>
-              ${warnBadge(ofWarn)}
-            </button>
-          </h2>
+            <h2 class="accordion-header" id="heading_${ofId}">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                data-bs-target="#${ofCollapse}" aria-expanded="false" aria-controls="${ofCollapse}">
+                ${ofTitle}
+                <span class="ms-2 text-muted small">(${alumnosCount} alumnos)</span>
+                ${warnBadge(ofWarn)}
+              </button>
+            </h2>
 
-          <div id="${ofCollapse}" class="accordion-collapse collapse" aria-labelledby="heading_${ofId}"
-            data-bs-parent="#accOf_${docId}">
-            <div class="accordion-body">
-              ${of.warnings?.length
+            <div id="${ofCollapse}" class="accordion-collapse collapse" aria-labelledby="heading_${ofId}"
+              data-bs-parent="#accOf_${docId}">
+              <div class="accordion-body">
+                ${of.warnings?.length
                             ? `<div class="alert alert-warning py-2 mb-2"><b>Advertencias oferta:</b> ${esc(of.warnings.join(", "))}</div>`
                             : ""
                         }
 
-              <div class="table-responsive">
-                <table class="table table-sm table-bordered align-middle">
-                  <thead>
-                    <tr>
-                      <th>#</th>
-                      <th>Matrícula</th>
-                      <th>Nombre</th>
-                      <th>Email</th>
-                      <th>Warnings</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    ${(of.alumnos || []).map((a, i) => {
+                <div class="table-responsive">
+                  <table class="table table-sm table-bordered align-middle">
+                    <thead>
+                      <tr>
+                        <th>#</th>
+                        <th>Matrícula</th>
+                        <th>Nombre</th>
+                        <th>Email</th>
+                        <th>Warnings</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      ${(of.alumnos || []).map((a, i) => {
                             const aHasWarn = !!a.has_warnings || (a.warnings && a.warnings.length);
                             const aWarnTxt = (a.warnings && a.warnings.length) ? esc(a.warnings.join(", ")) : "";
 
-                            // Si hay warning en alumno, abre su ruta completa
                             if (aHasWarn) {
                                 autoOpen.add(depCollapse);
                                 autoOpen.add(docCollapse);
@@ -209,26 +231,26 @@
                             }
 
                             return `
-                        <tr class="${aHasWarn ? "table-warning" : ""}">
-                          <td>${i + 1}</td>
-                          <td>${esc(a.matricula)}</td>
-                          <td>${esc(a.nombre)}</td>
-                          <td>${esc(a.email)}</td>
-                          <td>
-                            ${aHasWarn
+                          <tr class="${aHasWarn ? "table-warning" : ""}">
+                            <td>${i + 1}</td>
+                            <td>${esc(a.matricula)}</td>
+                            <td>${esc(a.nombre)}</td>
+                            <td>${esc(a.email)}</td>
+                            <td>
+                              ${aHasWarn
                                     ? `<span class="badge bg-warning text-dark">${aWarnTxt || "warning"}</span>`
                                     : ""
                                 }
-                          </td>
-                        </tr>
-                      `;
+                            </td>
+                          </tr>
+                        `;
                         }).join("")}
-                  </tbody>
-                </table>
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
-          </div>
-        `;
+          `;
                     ofContainer.appendChild(ofItem);
 
                     if (ofWarn > 0) {
@@ -242,9 +264,6 @@
 
         container.id = depAccordionId;
 
-        // ✅ Abrir automáticamente los bloques con warnings.
-        // Debe ejecutarse después de renderizar el DOM.
-        // Usamos Bootstrap Collapse de forma segura.
         setTimeout(() => {
             autoOpen.forEach((collapseId) => {
                 const el = document.getElementById(collapseId);
@@ -253,13 +272,11 @@
                     const inst = bootstrap.Collapse.getOrCreateInstance(el, { toggle: false });
                     inst.show();
                 } catch (e) {
-                    // Si bootstrap no está disponible por alguna razón, no rompemos la UI
                     console.warn("No se pudo abrir collapse:", collapseId, e);
                 }
             });
         }, 0);
     }
-
 
     async function cargarPreview() {
         const fileInput = document.getElementById("excelImportFile");
@@ -270,8 +287,12 @@
 
         clearImportUI();
 
+        selectedFile = fileInput.files[0];
+        lastPeriodo = "2025-1"; // si luego agregas selector de periodo, léelo aquí
+
         const fd = new FormData();
-        fd.append("file", fileInput.files[0]);
+        fd.append("file", selectedFile);
+        fd.append("periodo", lastPeriodo);
 
         const btn = document.getElementById("btnCargarPreview");
         if (btn) {
@@ -295,6 +316,8 @@
             setResumen(data);
             renderAccordion(data);
 
+            setImportEnabled(true);
+
             if ((data.summary?.warnings ?? 0) > 0) {
                 mostrarErrorImport("warning", "Vista previa generada con advertencias. Revisa los bloques.");
             } else {
@@ -302,7 +325,7 @@
             }
         } catch (e) {
             console.error(e);
-            mostrarErrorImport("danger", "Error de conexión/servidor al generar la vista previa." + e);
+            mostrarErrorImport("danger", "Error de conexión/servidor al generar la vista previa.");
         } finally {
             if (btn) {
                 btn.disabled = false;
@@ -311,26 +334,164 @@
         }
     }
 
+    function mostrarResultadoImport(data) {
+        const result = document.getElementById("importResult");
+        const badge = document.getElementById("importResultBadge");
+        const lote = document.getElementById("importLoteId");
+        const statsBox = document.getElementById("importStats");
+
+        if (result) result.classList.remove("d-none");
+        if (lote) lote.textContent = data.lote_id ?? "—";
+
+        const stats = data.stats || {};
+        const errores = Number(stats.errores || 0);
+
+        if (badge) {
+            if (data.already_imported) badge.innerHTML = `<span class="badge bg-warning text-dark ms-2">Ya importado</span>`;
+            else if (errores > 0) badge.innerHTML = `<span class="badge bg-danger ms-2">Con errores</span>`;
+            else badge.innerHTML = `<span class="badge bg-success ms-2">OK</span>`;
+        }
+
+        if (statsBox) {
+            statsBox.innerHTML = `
+        <div><b>Periodo:</b> ${esc(data.periodo || lastPeriodo)}</div>
+        <div><b>Filas procesadas:</b> ${esc(stats.filas ?? "—")}</div>
+        <div><b>Errores:</b> ${esc(errores)}</div>
+        <div><b>Emails sintéticos:</b> ${esc(stats.emails_sinteticos ?? 0)}</div>
+        <div><b>Docentes creados:</b> ${esc(stats.docentes_creados ?? 0)}</div>
+        <div><b>Estudiantes creados:</b> ${esc(stats.estudiantes_creados ?? 0)}</div>
+        <div><b>Inscripciones insertadas:</b> ${esc(stats.inscripciones_insertadas ?? 0)}</div>
+      `;
+        }
+    }
+
+    async function cargarErroresLote(loteId) {
+        const box = document.getElementById("importErrorsBox");
+        const tbody = document.getElementById("importErrorsTbody");
+        if (box) box.classList.remove("d-none");
+        if (tbody) tbody.innerHTML = `<tr><td colspan="7" class="text-muted">Cargando...</td></tr>`;
+
+        try {
+            const resp = await fetch(`/evaldoc/usuarios/import_errors.php?lote_id=${encodeURIComponent(loteId)}`);
+            const data = await resp.json();
+
+            if (!data.success) {
+                if (tbody) tbody.innerHTML = `<tr><td colspan="7" class="text-danger">No se pudieron cargar errores.</td></tr>`;
+                return;
+            }
+
+            const rows = data.rows || [];
+            if (!rows.length) {
+                if (tbody) tbody.innerHTML = `<tr><td colspan="7" class="text-muted">No hay errores registrados.</td></tr>`;
+                return;
+            }
+
+            const html = rows.map(r => `
+        <tr>
+          <td>${esc(r.row_num)}</td>
+          <td>${esc(r.materia_clave)}</td>
+          <td>${esc(r.grupo)}</td>
+          <td>${esc(r.profesor_nombre)}</td>
+          <td>${esc(r.matricula)}</td>
+          <td>${esc(r.alumno_nombre)}</td>
+          <td><span class="badge bg-danger">${esc(r.error)}</span></td>
+        </tr>
+      `).join("");
+
+            if (tbody) tbody.innerHTML = html;
+
+        } catch (e) {
+            console.error(e);
+            if (tbody) tbody.innerHTML = `<tr><td colspan="7" class="text-danger">Error de conexión.</td></tr>`;
+        }
+    }
+
+    async function ejecutarImportacion() {
+        if (!selectedFile) {
+            mostrarErrorImport("warning", "Primero genera la vista previa.");
+            return;
+        }
+
+        const btn = document.getElementById("btnEjecutarImport");
+        const loading = document.getElementById("importLoading");
+        const result = document.getElementById("importResult");
+
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Importando...`;
+        }
+        if (loading) loading.classList.remove("d-none");
+        if (result) result.classList.add("d-none");
+
+        try {
+            const fd = new FormData();
+            fd.append("file", selectedFile);
+            fd.append("periodo", lastPeriodo);
+
+            const resp = await fetch("/evaldoc/usuarios/import.php", {
+                method: "POST",
+                body: fd,
+            });
+
+            const data = await resp.json();
+
+            if (!data.success) {
+                mostrarErrorImport("danger", data.message || "Falló la importación.");
+                return;
+            }
+
+            lastLoteId = data.lote_id || null;
+            mostrarResultadoImport(data);
+
+            if (data.already_imported) {
+                mostrarErrorImport("warning", "Este archivo ya había sido importado (idempotencia).");
+            } else if ((data.stats?.errores ?? 0) > 0) {
+                mostrarErrorImport("warning", "Importación finalizada con errores. Revisa el detalle.");
+            } else {
+                mostrarErrorImport("success", "Importación completada correctamente.");
+            }
+
+            if ((data.stats?.errores ?? 0) > 0 && lastLoteId) {
+                await cargarErroresLote(lastLoteId);
+            }
+        } catch (e) {
+            console.error(e);
+            mostrarErrorImport("danger", "Error de conexión/servidor al importar.");
+        } finally {
+            if (loading) loading.classList.add("d-none");
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = `<i class="fa-solid fa-file-import"></i> Importar`;
+            }
+        }
+    }
+
     /**
      * ✅ ÚNICO punto de entrada
-     * Llamar cada vez que se entra a la sección Usuarios.
-     * Usa off/on para no duplicar handlers.
      */
     window.ImportUsuarios.init = function () {
-        // Abrir modal
+        // Abrir modal (si existe un botón externo)
         $(document).off("click", "#btnAbrirImportModal");
         $(document).on("click", "#btnAbrirImportModal", function () {
             clearImportUI();
+            selectedFile = null;
+
             $("#excelImportFile").val("");
             $("#importFileName").text("");
+
             $("#importPreviewModal").modal("show");
         });
 
-        // Mostrar nombre de archivo
+        // Mostrar nombre de archivo + reset preview/import
         $(document).off("change", "#excelImportFile");
         $(document).on("change", "#excelImportFile", function () {
             const f = this.files && this.files[0] ? this.files[0].name : "";
             $("#importFileName").text(f);
+
+            selectedFile = this.files && this.files[0] ? this.files[0] : null;
+
+            resetResultUI();
+            setImportEnabled(false);
         });
 
         // Generar preview
@@ -338,6 +499,20 @@
         $(document).on("click", "#btnCargarPreview", function (e) {
             e.preventDefault();
             cargarPreview();
+        });
+
+        // Importar
+        $(document).off("click", "#btnEjecutarImport");
+        $(document).on("click", "#btnEjecutarImport", function (e) {
+            e.preventDefault();
+            ejecutarImportacion();
+        });
+
+        // Recargar errores
+        $(document).off("click", "#btnRefreshImportErrors");
+        $(document).on("click", "#btnRefreshImportErrors", function (e) {
+            e.preventDefault();
+            if (lastLoteId) cargarErroresLote(lastLoteId);
         });
     };
 })();

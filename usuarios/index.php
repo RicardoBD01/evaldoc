@@ -12,7 +12,8 @@
                     <h5>Gestión de usuarios</h5>
                 </div>
                 <div class="col-auto">
-                    <button type="button" class="btn btn-outline-dark" id="btnAbrirImportModal"><i class="fa-regular fa-file-excel"></i> Importar
+                    <button type="button" class="btn btn-outline-dark" id="btnAbrirImportModal"><i
+                            class="fa-regular fa-file-excel"></i> Importar
                         usuarios</button>
                     <button type="button" class="btn btn-outline-dark" data-bs-toggle="modal"
                         data-bs-target="#insertModal"><i class="fa-solid fa-plus"></i> Agregar usuario</button>
@@ -307,11 +308,65 @@
 
                 <!-- Acordeón -->
                 <div id="importAccordionContainer" class="accordion"></div>
+
+                <!-- Resultado de importación -->
+                <div id="importResult" class="d-none mt-3">
+                    <div class="alert alert-info py-2 mb-2">
+                        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                            <div>
+                                <b>Resultado de importación</b>
+                                <span id="importResultBadge"></span>
+                            </div>
+                            <div class="small text-muted">
+                                Lote: <span id="importLoteId">—</span>
+                            </div>
+                        </div>
+                        <div id="importStats" class="mt-2 small"></div>
+                    </div>
+
+                    <div id="importErrorsBox" class="d-none">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <h6 class="mb-2">Errores detectados</h6>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" id="btnRefreshImportErrors">
+                                <i class="fa-solid fa-rotate"></i> Recargar
+                            </button>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="table table-sm table-bordered align-middle">
+                                <thead>
+                                    <tr>
+                                        <th>Fila</th>
+                                        <th>Materia</th>
+                                        <th>Grupo</th>
+                                        <th>Docente</th>
+                                        <th>Matrícula</th>
+                                        <th>Alumno</th>
+                                        <th>Error</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="importErrorsTbody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Loader -->
+                <div id="importLoading" class="d-none mt-3">
+                    <div class="alert alert-secondary py-2 mb-0">
+                        <i class="fa-solid fa-spinner fa-spin"></i> Importando… no cierres esta ventana.
+                    </div>
+                </div>
+
             </div>
 
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                <!-- Más adelante aquí pondrás "Confirmar importación" -->
+
+                <button type="button" class="btn btn-success" id="btnEjecutarImport" disabled>
+                    <i class="fa-solid fa-file-import"></i> Importar
+                </button>
+
             </div>
         </div>
     </div>
